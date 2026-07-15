@@ -9,6 +9,7 @@ class Game:
 		info = pygame.display.Info()
 		self.screen = pygame.display.set_mode((info.current_w,(info.current_h - 60)), pygame.SCALED, pygame.RESIZABLE)
 		self.clock = pygame.time.Clock()
+		self.dt = 0
 		#self.PlayerSpriteSheet = SpriteSheet(r"path for the spritesheet")
 		#self.EnemySpriteSheet = SpriteSheet(r"path for the spritesheet")
 		self.GroundSpriteSheet = SpriteSheet(r"C:\Users\flapb\OneDrive - Spencer Academies Trust\comp sci\NEA\coding\images\TX Tileset Grass.png")
@@ -43,25 +44,28 @@ class Game:
 		self.groundSprites = pygame.sprite.Group()
 		self.enemies = pygame.sprite.Group()
 		self.blocks = pygame.sprite.Group()
+		self.bullets = pygame.sprite.Group()
 		self.createLevel()
 
 	def update(self):
-		self.allSprites.update()
+		self.allSprites.update(self.dt)
 
 	def events(self):
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				self.playing = False
 				self.running = False
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				if event.button == 1:
+					self.player.shoot()
 
 	def draw(self):
 		self.allSprites.customDraw(self.player)
-		self.clock.tick(120)
 		pygame.display.update()
 
 	def main(self):
 		while self.playing:
-			self.clock.tick(120)
+			self.dt = self.clock.tick(120) / 1000
 			self.events()
 			self.update()
 			self.draw()

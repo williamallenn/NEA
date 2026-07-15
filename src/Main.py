@@ -12,7 +12,7 @@ class Game:
 		self.dt = 0
 		#self.PlayerSpriteSheet = SpriteSheet(r"path for the spritesheet")
 		#self.EnemySpriteSheet = SpriteSheet(r"path for the spritesheet")
-		self.GroundSpriteSheet = SpriteSheet(r"C:\Users\flapb\OneDrive - Spencer Academies Trust\comp sci\NEA\coding\images\TX Tileset Grass.png")
+		self.GroundSpriteSheet = SpriteSheet("images/Floor.png")
 		self.map = "src/Maps/Map1.txt"
 		self.running = True
   

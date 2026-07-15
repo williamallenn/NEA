@@ -1,5 +1,6 @@
 import pygame
 import sys
+from settings import *
 
 class SpriteSheet:
 	def __init__(self, file):
@@ -43,11 +44,11 @@ class Player(pygame.sprite.Sprite):
 		self.game = game
 		self.groups = game.allSprites
 		pygame.sprite.Sprite.__init__(self, game.allSprites)
-		self.x = x * 32
-		self.y = y * 32
+		self.x = x * TileSize
+		self.y = y * TileSize
 		self.direction = pygame.math.Vector2()
-		self.width = 32
-		self.height = 32
+		self.width = TileSize
+		self.height = TileSize
 		self.looking = "down"
 		self.image = pygame.Surface([self.width, self.height])
 		self.image.blit(pygame.image.load(r"C:\Users\flapb\OneDrive - Spencer Academies Trust\comp sci\NEA\coding\images\Player1.png"), (0, 0))
@@ -183,10 +184,10 @@ class Block(pygame.sprite.Sprite):
 		self.game = game
 		self.groups = game.groundSprites, game.blocks
 		pygame.sprite.Sprite.__init__(self, self.groups)
-		self.x = x * 32
-		self.y = y * 32
-		self.width = 32
-		self.height = 32
+		self.x = x * TileSize
+		self.y = y * TileSize
+		self.width = TileSize
+		self.height = TileSize
 		self.image = pygame.Surface([self.width, self.height])
 		self.image.fill("black")
 		self.rect = self.image.get_rect()
@@ -198,11 +199,11 @@ class Ground(pygame.sprite.Sprite):
 		self.game = game
 		self.groups = game.groundSprites
 		pygame.sprite.Sprite.__init__(self, self.groups)
-		self.x = x * 32
-		self.y = y * 32
-		self.width = 32
-		self.height = 32
-		self.image = self.game.GroundSpriteSheet.getSprite(160, 32, self.width, self.height)
+		self.x = x * TileSize
+		self.y = y * TileSize
+		self.width = TileSize
+		self.height = TileSize
+		self.image = self.game.GroundSpriteSheet.getSprite(192, 0, self.width, self.height)
 		self.rect = self.image.get_rect()
 		self.rect.x = self.x
 		self.rect.y = self.y

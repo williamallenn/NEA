@@ -14,6 +14,7 @@ class Game:
 		#self.EnemySpriteSheet = SpriteSheet(r"path for the spritesheet")
 		self.GroundSpriteSheet = SpriteSheet("images/Floor.png")
 		self.map = "src/Maps/Map1.txt"
+		self.EnemyCount = 5
 		self.running = True
   
 	def ChangeMap(self, newMap):
@@ -29,14 +30,26 @@ class Game:
 			return []
 
 	def createLevel(self):
-		TileClasses = {"#": Block, "G": Grass, "E": Enemy}
-		for i, row in enumerate(self.loadLevel(self.map)):
+		TileClasses = {"#": Block, "G": Grass}
+		level = self.loadLevel(self.map)
+		self.validTiles = []
+		for i, row in enumerate(level):
 			for j, tile in enumerate(row):
 				Ground(self, j, i)
-				if tile == "P":
-					self.player = Player(self, j, i)
-				elif tile in TileClasses:
+				if tile in TileClasses:
 					TileClasses[tile](self, j, i)
+				if tile != "#":
+					self.validTiles.append((j, i))
+
+		height = len(level)
+		width = max((len(row) for row in level), default=0)
+		self.player = Player(self, width // 2, height // 2)
+		self.spawnEnemies(self.EnemyCount)
+
+	def spawnEnemies(self, count):
+		for _ in range(count):
+			x, y = random.choice(self.validTiles)
+			Enemy(self, x, y)
 
 	def new(self):
 		self.playing = True

@@ -1,1 +1,1 @@
-TileSize = 32
+TileSize = 64

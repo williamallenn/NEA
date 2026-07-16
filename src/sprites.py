@@ -51,7 +51,9 @@ class Player(pygame.sprite.Sprite):
 		self.height = TileSize
 		self.looking = "down"
 		self.image = pygame.Surface([self.width, self.height])
-		self.image.blit(pygame.image.load(r"C:\Users\flapb\OneDrive - Spencer Academies Trust\comp sci\NEA\coding\images\Player1.png"), (0, 0))
+		playerImg = pygame.image.load(r"C:\Users\flapb\OneDrive - Spencer Academies Trust\comp sci\NEA\coding\images\Player1.png")
+		playerImg = pygame.transform.scale(playerImg, (self.width, self.height))
+		self.image.blit(playerImg, (0, 0))
 		self.rect = self.image.get_rect()
 		self.rect.x = self.x
 		self.rect.y = self.y
@@ -85,7 +87,12 @@ class Player(pygame.sprite.Sprite):
 	def shoot(self):
 		now = pygame.time.get_ticks()
 		if now - self.last_attack_time >= self.attack_cooldown:
-			Bullet(self.game, self)
+			mouse_screen_pos = pygame.mouse.get_pos()
+			world_mouse_pos = pygame.math.Vector2(mouse_screen_pos) + self.game.allSprites.offset
+			direction = world_mouse_pos - pygame.math.Vector2(self.rect.center)
+			if direction.magnitude() != 0:
+				direction = direction.normalize()
+			Bullet(self.game, self, direction)
 			self.last_attack_time = now
 
 	def collideWBlocks(self, direction):
@@ -149,7 +156,7 @@ class Enemy(Player):
 		self.health = 3
 		self.rect.x = self.x
 		self.rect.y = self.y
-
+  
 	def move(self):
 		self.direction.x = 0
 		self.direction.y = 0
@@ -180,7 +187,6 @@ class Enemy(Player):
 
 class Block(pygame.sprite.Sprite):
 	def __init__(self, game, x, y):
-
 		self.game = game
 		self.groups = game.groundSprites, game.blocks
 		pygame.sprite.Sprite.__init__(self, self.groups)
@@ -193,7 +199,7 @@ class Block(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.x = self.x
 		self.rect.y = self.y
-
+  
 class Ground(pygame.sprite.Sprite):
 	def __init__(self, game, x, y):
 		self.game = game
@@ -203,7 +209,7 @@ class Ground(pygame.sprite.Sprite):
 		self.y = y * TileSize
 		self.width = TileSize
 		self.height = TileSize
-		self.image = self.game.GroundSpriteSheet.getSprite(192, 0, self.width, self.height)
+		self.image = self.game.GroundSpriteSheet.getSprite(64,64, self.width, self.height)
 		self.rect = self.image.get_rect()
 		self.rect.x = self.x
 		self.rect.y = self.y
@@ -211,30 +217,21 @@ class Ground(pygame.sprite.Sprite):
 class Grass(Ground):
 	def __init__(self, game, x, y):
 		super().__init__(game, x, y)
-		self.image = self.game.GroundSpriteSheet.getSprite(160, 128, self.width, self.height)
+		self.image = self.game.GroundSpriteSheet.getSprite(0, 768, self.width, self.height)
 
 class Bullet(pygame.sprite.Sprite):
-	def __init__(self, game, player):
+	def __init__(self, game, player, direction):
 		self.game = game
 		self.groups = game.allSprites, game.bullets
 		pygame.sprite.Sprite.__init__(self, self.groups)
-
 		self.image = pygame.Surface((8, 8))
 		self.image.fill("yellow")
-		player_screen_pos = pygame.math.Vector2(player.rect.center) - self.game.allSprites.offset
-		mouse_pos = pygame.math.Vector2(pygame.mouse.get_pos())
-		direction_vector = mouse_pos - player_screen_pos
-
-		if direction_vector.length() > 0:
-			self.direction = direction_vector.normalize()
-		else:
-			self.direction = pygame.math.Vector2(0, -1)
+		self.direction = direction
 		spawn = pygame.math.Vector2(player.rect.center) + self.direction * 20
 		self.rect = self.image.get_rect(center=spawn)
-
-		self.speed = 400  
+		self.speed = 300 
 		self.spawnTime = pygame.time.get_ticks()
-		self.lifetime = 1000  
+		self.lifetime = 1000   
 
 	def checkHit(self):
 		hitEnemies = pygame.sprite.spritecollide(self, self.game.enemies, False)

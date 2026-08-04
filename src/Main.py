@@ -16,6 +16,7 @@ class Game:
 		self.map = "src/Maps/Map1.txt"
 		self.EnemyCount = 5
 		self.running = True
+		pygame.mouse.set_cursor(*pygame.cursors.broken_x)
   
 	def ChangeMap(self, newMap):
 		self.map = newMap
@@ -30,7 +31,7 @@ class Game:
 			return []
 
 	def createLevel(self):
-		TileClasses = {"#": Block, "G": Grass}
+		TileClasses = {"#": Block, "D": Dirt, "W": Water, "L": WaterTopLeft, "T": WaterTop, "R": WaterTopRight, "l": WaterLeft, "r": WaterRight}
 		level = self.loadLevel(self.map)
 		self.validTiles = []
 		for i, row in enumerate(level):
@@ -38,7 +39,7 @@ class Game:
 				Ground(self, j, i)
 				if tile in TileClasses:
 					TileClasses[tile](self, j, i)
-				if tile != "#":
+				if tile == ".":
 					self.validTiles.append((j, i))
 
 		height = len(level)
@@ -47,7 +48,7 @@ class Game:
 		self.spawnEnemies(self.EnemyCount)
 
 	def spawnEnemies(self, count):
-		for _ in range(count):
+		for i in range(count):
 			x, y = random.choice(self.validTiles)
 			Enemy(self, x, y)
 

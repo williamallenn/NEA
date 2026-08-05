@@ -81,7 +81,6 @@ class Player(pygame.sprite.Sprite):
 			self.looking = "right"
 		if Key[pygame.K_ESCAPE]:
 			self.game.playing = False
-			self.game.running = False
 		if self.direction.magnitude() != 0:
 			self.direction = self.direction.normalize()
 
@@ -313,3 +312,32 @@ class Bullet(pygame.sprite.Sprite):
 		self.checkHit()
 		if pygame.time.get_ticks() - self.spawnTime > self.lifetime:
 			self.kill()
+
+class Button:
+	def __init__(self, image_path, x, y, scale=1.0):
+		image = pygame.image.load(image_path).convert_alpha()
+		width = int(image.get_width() * scale)
+		height = int(image.get_height() * scale)
+		self.image = pygame.transform.scale(image, (width, height))
+		self.hover_image = pygame.transform.scale(self.image, (int(width * 1.08), int(height * 1.08)))
+		self.rect = self.image.get_rect(center=(x, y))
+		self.hovered = False
+
+	def update(self, mouse_pos):
+		self.hovered = self.rect.collidepoint(mouse_pos)
+
+	def draw(self, surface):
+		if self.hovered:
+			img = self.hover_image
+			rect = img.get_rect(center=self.rect.center)
+		else:
+			img = self.image
+			rect = self.rect
+		surface.blit(img, rect)
+
+	def clicked(self, event):
+		return (
+			event.type == pygame.MOUSEBUTTONDOWN
+			and event.button == 1
+			and self.rect.collidepoint(event.pos)
+		)

@@ -16,8 +16,14 @@ class Game:
 		self.map = "src/Maps/Map1.txt"
 		self.EnemyCount = 5
 		self.running = True
+		self.state = "menu"
 		pygame.mouse.set_cursor(*pygame.cursors.broken_x)
-  
+
+		w, h = self.screen.get_size()
+		self.playButton = Button("images/Play_button.png", w // 2, h // 2 + 20, scale=2.5)
+		self.settingsButton = Button("images/Settings_button.png", w // 2, h // 2 + 160, scale=2.5)
+		self.exitButton = Button("images/Exit_button.png", w // 2, h // 2 + 300, scale=2.5)
+
 	def ChangeMap(self, newMap):
 		self.map = newMap
 		self.new()
@@ -83,12 +89,65 @@ class Game:
 			self.events()
 			self.update()
 			self.draw()
-		self.running = False
+
+	def menu(self):
+		while self.state == "menu" and self.running:
+			mouse_pos = pygame.mouse.get_pos()
+
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					self.running = False
+					self.state = None
+
+				if self.playButton.clicked(event):
+					self.state = "playing"
+				elif self.settingsButton.clicked(event):
+					self.state = "settings"
+				elif self.exitButton.clicked(event):
+					self.running = False
+					self.state = None
+
+			self.playButton.update(mouse_pos)
+			self.settingsButton.update(mouse_pos)
+			self.exitButton.update(mouse_pos)
+
+			self.screen.fill("#73D8E7")
+			self.playButton.draw(self.screen)
+			self.settingsButton.draw(self.screen)
+			self.exitButton.draw(self.screen)
+
+			pygame.display.update()
+			self.clock.tick(60)
+
+	def settingsMenu(self):
+		font = pygame.font.SysFont(None, 48)
+		while self.state == "settings" and self.running:
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					self.running = False
+					self.state = None
+				if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+					self.state = "menu"
+
+			self.screen.fill("black")
+			text = font.render("Settings (placeholder) - press ESC to go back", True, "white")
+			self.screen.blit(text, text.get_rect(center=(self.screen.get_width()//2, self.screen.get_height()//2)))
+			pygame.display.update()
+			self.clock.tick(60)
+
+	def run(self):
+		while self.running:
+			if self.state == "menu":
+				self.menu()
+			elif self.state == "settings":
+				self.settingsMenu()
+			elif self.state == "playing":
+				self.new()
+				self.main()
+				self.state = "menu"
 
 g = Game()
-g.new()
-while g.running:
-	g.main()
+g.run()
 
 pygame.quit()
 sys.exit()

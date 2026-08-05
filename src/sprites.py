@@ -29,13 +29,14 @@ class CameraGroup(pygame.sprite.Group):
 	def customDraw(self, player):
 		self.center_target_camera(player)
 		self.display_surface.fill("#73D8E7")
-  
+
 		for sprite in self.game.groundSprites:
 			offset_pos = sprite.rect.topleft - self.offset
 			self.display_surface.blit(sprite.image, offset_pos)
 
 		for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
-			offset_pos = sprite.rect.topleft - self.offset
+			image_rect = sprite.image.get_rect(center=sprite.rect.center)
+			offset_pos = image_rect.topleft - self.offset
 			self.display_surface.blit(sprite.image, offset_pos)
 
 
@@ -51,11 +52,12 @@ class Player(pygame.sprite.Sprite):
 		self.width = TileSize
 		self.height = TileSize
 		self.looking = "down"
-		self.image = pygame.Surface([self.width, self.height])
-		playerImg = pygame.image.load("images/Player1.png")
-		playerImg = pygame.transform.scale(playerImg, (self.width, self.height))
+		sprite_scale = 2
+		self.image = pygame.Surface([int(TileSize * sprite_scale)] * 2, pygame.SRCALPHA)
+		playerImg = pygame.image.load("images/Player1.png").convert_alpha()
+		playerImg = pygame.transform.scale(playerImg, self.image.get_size())
 		self.image.blit(playerImg, (0, 0))
-		self.rect = self.image.get_rect()
+		self.rect = pygame.Rect(0, 0, self.width, self.height) 
 		self.rect.x = self.x
 		self.rect.y = self.y
 		self.health = 10
@@ -142,11 +144,16 @@ class Enemy(Player):
 		super().__init__(game, x, y)
 		self.groups = game.allSprites, game.enemies
 		game.enemies.add(self)
-		self.image.fill("red")
-		self.speed = 90
-		self.health = 3
+		sprite_scale = 2
+		self.image = pygame.Surface([int(TileSize * sprite_scale)] * 2, pygame.SRCALPHA)
+		EnemyImg = pygame.image.load("images/zombie.png").convert_alpha()
+		EnemyImg = pygame.transform.scale(EnemyImg, self.image.get_size())
+		self.image.blit(EnemyImg, (0, 0))
+		self.rect = pygame.Rect(0, 0, self.width, self.height)
 		self.rect.x = self.x
 		self.rect.y = self.y
+		self.speed = 90
+		self.health = 3
   
 	def move(self):
 		self.direction.x = 0

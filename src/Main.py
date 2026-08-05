@@ -12,6 +12,7 @@ class Game:
 		self.dt = 0
 		#self.PlayerSpriteSheet = SpriteSheet(r"path for the spritesheet")
 		#self.EnemySpriteSheet = SpriteSheet(r"path for the spritesheet")
+		self.ZombieSpriteSheet = SpriteSheet("images/zombie-sheet.png",alpha=True)
 		self.GroundSpriteSheet = SpriteSheet("images/Floor.png")
 		self.map = "src/Maps/Map1.txt"
 		self.EnemyCount = 5

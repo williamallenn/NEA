@@ -4,11 +4,18 @@ import random
 from settings import *
 
 class SpriteSheet:
-	def __init__(self, file):
-		self.sheet = pygame.image.load(file).convert()
+	def __init__(self, file, alpha=False):
+		self.alpha = alpha
+		if alpha:
+			self.sheet = pygame.image.load(file).convert_alpha()
+		else:
+			self.sheet = pygame.image.load(file).convert()
 
 	def getSprite(self, x, y, width, height):
-		sprite = pygame.Surface([width, height])
+		if self.alpha:
+			sprite = pygame.Surface([width, height], pygame.SRCALPHA)
+		else:
+			sprite = pygame.Surface([width, height])
 		sprite.blit(self.sheet, (0, 0), (x, y, width, height))
 		return sprite
 
@@ -144,16 +151,33 @@ class Enemy(Player):
 		super().__init__(game, x, y)
 		self.groups = game.allSprites, game.enemies
 		game.enemies.add(self)
-		sprite_scale = 2
-		self.image = pygame.Surface([int(TileSize * sprite_scale)] * 2, pygame.SRCALPHA)
-		EnemyImg = pygame.image.load("images/zombie.png").convert_alpha()
-		EnemyImg = pygame.transform.scale(EnemyImg, self.image.get_size())
-		self.image.blit(EnemyImg, (0, 0))
+		self.speed = 90
+		self.health = 3
 		self.rect = pygame.Rect(0, 0, self.width, self.height)
 		self.rect.x = self.x
 		self.rect.y = self.y
-		self.speed = 90
-		self.health = 3
+		sheet = game.ZombieSpriteSheet.sheet
+		frame_count = 4
+		frame_width = sheet.get_width() // frame_count
+		frame_height = sheet.get_height()
+		sprite_scale = 1.5
+		img_size = int(TileSize * sprite_scale)
+
+		self.frames = []
+		for i in range(frame_count):
+			frame = game.ZombieSpriteSheet.getSprite(i * frame_width, 0, frame_width, frame_height)
+			frame = pygame.transform.scale(frame, (img_size, img_size))
+			self.frames.append(frame)
+
+		self.frame_index = 0
+		self.animation_speed = 8 
+		self.image = self.frames[0]
+
+	def animate(self, dt):
+		self.frame_index += self.animation_speed * dt
+		if self.frame_index >= len(self.frames):
+			self.frame_index = 0
+		self.image = self.frames[int(self.frame_index)]
   
 	def move(self):
 		self.direction.x = 0
@@ -209,6 +233,8 @@ class Enemy(Player):
 	def update(self, dt):
 		super().update(dt)
 		self.softCollideWEnemies()
+		if self.direction.magnitude() != 0:
+			self.animate(dt)
 
 class Block(pygame.sprite.Sprite):
 	def __init__(self, game, x, y):

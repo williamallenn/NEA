@@ -1,7 +1,65 @@
 import pygame
 import sys
 import random
+from collections import deque
 from sprites import *
+
+TileLegend = {
+	"#": {"blocking": True},
+	"D": {"ground": "dirt"},
+	"W": {"ground": "water"},
+}
+
+def isWaterTile(grid, x, y):
+	if 0 <= y < len(grid) and 0 <= x < len(grid[y]):
+		return grid[y][x] == "W"
+	return False
+
+def getWaterVariant(grid, x, y):
+	up = isWaterTile(grid, x, y - 1)
+	down = isWaterTile(grid, x, y + 1)
+	left = isWaterTile(grid, x - 1, y)
+	right = isWaterTile(grid, x + 1, y)
+
+	if not up and not left:
+		return "water_top_left"
+	if not up and not right:
+		return "water_top_right"
+	if not up:
+		return "water_top"
+	if not left:
+		return "water_left"
+	if not right:
+		return "water_right"
+	return "water"
+
+class Queue:
+	def __init__(self):
+		self.items = []
+
+	def enqueue(self, item):
+		self.items.append(item)
+
+	def dequeue(self):
+		return self.items.pop(0)
+
+	def isEmpty(self):
+		return len(self.items) == 0
+
+
+def getReachableTiles(validTiles, start):
+	validSet = set(validTiles)
+	visited = {start}
+	queue = Queue()
+	queue.enqueue(start)
+	while not queue.isEmpty():
+		x, y = queue.dequeue()
+		for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+			neighbour = (x + dx, y + dy)
+			if neighbour in validSet and neighbour not in visited:
+				visited.add(neighbour)
+				queue.enqueue(neighbour)
+	return visited
 
 class Game:
 	def __init__(self):
@@ -38,25 +96,39 @@ class Game:
 			return []
 
 	def createLevel(self):
-		TileClasses = {"#": Block, "D": Dirt, "W": Water, "L": WaterTopLeft, "T": WaterTop, "R": WaterTopRight, "l": WaterLeft, "r": WaterRight}
 		level = self.loadLevel(self.map)
 		self.validTiles = []
 		for i, row in enumerate(level):
 			for j, tile in enumerate(row):
-				Ground(self, j, i)
-				if tile in TileClasses:
-					TileClasses[tile](self, j, i)
+				info = TileLegend.get(tile)
+				if info and info.get("ground") == "water":
+					ground_key = getWaterVariant(level, j, i)
+				elif info and "ground" in info:
+					ground_key = info["ground"]
+				else:
+					ground_key = "ground"
+				Ground(self, j, i, ground_key)
+				if info and info.get("blocking"):
+					Block(self, j, i)
 				if tile == ".":
 					self.validTiles.append((j, i))
 
 		height = len(level)
 		width = max((len(row) for row in level), default=0)
-		self.player = Player(self, width // 2, height // 2)
+		spawn = (width // 2, height // 2)
+		self.player = Player(self, *spawn)
+
+		self.reachableTiles = getReachableTiles(self.validTiles, spawn)
+		unreachable = set(self.validTiles) - self.reachableTiles
+		if unreachable:
+			print(f"Warning: {len(unreachable)} unreachable tile(s) in {self.map}: {sorted(unreachable)}")
+
 		self.spawnEnemies(self.EnemyCount)
 
 	def spawnEnemies(self, count):
+		spawnPool = list(self.reachableTiles) if self.reachableTiles else self.validTiles
 		for i in range(count):
-			x, y = random.choice(self.validTiles)
+			x, y = random.choice(spawnPool)
 			Enemy(self, x, y)
 
 	def new(self):

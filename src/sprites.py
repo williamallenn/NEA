@@ -252,7 +252,7 @@ class Block(pygame.sprite.Sprite):
 		self.rect.y = self.y
   
 class Ground(pygame.sprite.Sprite):
-	def __init__(self, game, x, y):
+	def __init__(self, game, x, y, tile_key="ground"):
 		self.game = game
 		self.groups = game.groundSprites
 		pygame.sprite.Sprite.__init__(self, self.groups)
@@ -260,45 +260,11 @@ class Ground(pygame.sprite.Sprite):
 		self.y = y * TileSize
 		self.width = TileSize
 		self.height = TileSize
-		self.image = self.game.GroundSpriteSheet.getSprite(0,768, self.width, self.height)
+		sheet_x, sheet_y = GroundSpriteCoords[tile_key]
+		self.image = self.game.GroundSpriteSheet.getSprite(sheet_x, sheet_y, self.width, self.height)
 		self.rect = self.image.get_rect()
 		self.rect.x = self.x
 		self.rect.y = self.y
-
-class Dirt(Ground):
-	def __init__(self, game, x, y):
-		super().__init__(game, x, y)
-		self.image = self.game.GroundSpriteSheet.getSprite(64, 64, self.width, self.height)
-
-class Water(Ground):
-    def __init__(self,game,x,y):
-        super().__init__(game,x,y)
-        self.image = self.game.GroundSpriteSheet.getSprite(640,768,self.width,self.height)
-
-class WaterTopLeft(Ground):
-    def __init__(self,game,x,y):
-        super().__init__(game,x,y)
-        self.image = self.game.GroundSpriteSheet.getSprite(704,384,self.width,self.height)
-
-class WaterLeft(Ground):
-    def __init__(self,game,x,y):
-        super().__init__(game,x,y)
-        self.image = self.game.GroundSpriteSheet.getSprite(704,448,self.width,self.height)
-        
-class WaterTop(Ground):
-    def __init__(self,game,x,y):
-        super().__init__(game,x,y)
-        self.image = self.game.GroundSpriteSheet.getSprite(768,384,self.width,self.height)
-        
-class WaterTopRight(Ground):
-    def __init__(self,game,x,y):
-        super().__init__(game,x,y)
-        self.image = self.game.GroundSpriteSheet.getSprite(832,384,self.width,self.height)
-
-class WaterRight(Ground):
-    def __init__(self,game,x,y):
-        super().__init__(game,x,y)
-        self.image = self.game.GroundSpriteSheet.getSprite(832,448,self.width,self.height)
 
 class Bullet(pygame.sprite.Sprite):
 	def __init__(self, game, player, direction):

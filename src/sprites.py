@@ -276,9 +276,9 @@ class Bullet(pygame.sprite.Sprite):
 		self.direction = direction
 		spawn = pygame.math.Vector2(player.rect.center) + self.direction * 20
 		self.rect = self.image.get_rect(center=spawn)
-		self.speed = 300 
+		self.speed = 400 
 		self.spawnTime = pygame.time.get_ticks()
-		self.lifetime = 1000   
+		self.lifetime = 3500 
 
 	def checkHit(self):
 		hitEnemies = pygame.sprite.spritecollide(self, self.game.enemies, False)

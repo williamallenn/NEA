@@ -266,7 +266,7 @@ class Game:
 			elif self.state == "playing":
 				self.new()
 				self.main()
-				self.state = "menu"
+			
 
 g = Game()
 g.run()

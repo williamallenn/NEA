@@ -1,4 +1,9 @@
 TileSize = 64
+MaxWaves = 5
+EnemyCountBase = 5
+EnemyCountIncrement = 2
+CoinsPerKill = 10
+CoinsPerWave = 50
 
 GroundSpriteCoords = {
 	"ground": (0, 768),

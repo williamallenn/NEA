@@ -1,7 +1,6 @@
 import pygame
 import sys
 import random
-from collections import deque
 from sprites import *
 
 TileLegend = {
@@ -73,9 +72,12 @@ class Game:
 		self.ZombieSpriteSheet = SpriteSheet("images/zombie-sheet.png",alpha=True)
 		self.GroundSpriteSheet = SpriteSheet("images/Floor.png")
 		self.map = "src/Maps/Map1.txt"
-		self.EnemyCount = 5
 		self.running = True
 		self.state = "menu"
+		self.coins = 0
+		self.wave = 1
+		self.waveActive = False
+		self.hudFont = pygame.font.SysFont(None, 36)
 		pygame.mouse.set_cursor(*pygame.cursors.broken_x)
 
 		w, h = self.screen.get_size()
@@ -123,7 +125,7 @@ class Game:
 		if unreachable:
 			print(f"Warning: {len(unreachable)} unreachable tile(s) in {self.map}: {sorted(unreachable)}")
 
-		self.spawnEnemies(self.EnemyCount)
+		self.startWave()
 
 	def spawnEnemies(self, count):
 		spawnPool = list(self.reachableTiles) if self.reachableTiles else self.validTiles
@@ -131,8 +133,30 @@ class Game:
 			x, y = random.choice(spawnPool)
 			Enemy(self, x, y)
 
+	def startWave(self):
+		self.waveActive = True
+		enemyCount = EnemyCountBase + (self.wave - 1) * EnemyCountIncrement
+		self.spawnEnemies(enemyCount)
+
+	def killEnemy(self, enemy):
+		self.coins += CoinsPerKill
+		enemy.kill()
+
+	def checkWaveStatus(self):
+		if self.waveActive and len(self.enemies) == 0:
+			self.waveActive = False
+			self.coins += CoinsPerWave
+			if self.wave >= MaxWaves:
+				self.playing = False
+				self.state = "upgrade"
+			else:
+				self.wave += 1
+				self.startWave()
+
 	def new(self):
 		self.playing = True
+		self.coins = 0
+		self.wave = 1
 		self.allSprites = CameraGroup(self)
 		self.groundSprites = pygame.sprite.Group()
 		self.enemies = pygame.sprite.Group()
@@ -142,6 +166,7 @@ class Game:
 
 	def update(self):
 		self.allSprites.update(self.dt)
+		self.checkWaveStatus()
 
 	def events(self):
 		for event in pygame.event.get():
@@ -154,7 +179,13 @@ class Game:
 
 	def draw(self):
 		self.allSprites.customDraw(self.player)
+		self.drawHUD()
 		pygame.display.update()
+
+	def drawHUD(self):
+		hudText = f"Wave {self.wave}/{MaxWaves}   Coins: {self.coins}"
+		hudSurf = self.hudFont.render(hudText, True, "white")
+		self.screen.blit(hudSurf, (10, 10))
 
 	def main(self):
 		while self.playing:
@@ -208,12 +239,30 @@ class Game:
 			pygame.display.update()
 			self.clock.tick(60)
 
+	def upgradeMenu(self):
+		font = pygame.font.SysFont(None, 48)
+		while self.state == "upgrade" and self.running:
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					self.running = False
+					self.state = None
+				if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+					self.state = "menu"
+
+			self.screen.fill("black")
+			text = font.render(f"Upgrades (placeholder) - Coins: {self.coins} - press ESC to return to menu", True, "white")
+			self.screen.blit(text, text.get_rect(center=(self.screen.get_width()//2, self.screen.get_height()//2)))
+			pygame.display.update()
+			self.clock.tick(60)
+
 	def run(self):
 		while self.running:
 			if self.state == "menu":
 				self.menu()
 			elif self.state == "settings":
 				self.settingsMenu()
+			elif self.state == "upgrade":
+				self.upgradeMenu()
 			elif self.state == "playing":
 				self.new()
 				self.main()

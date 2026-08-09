@@ -286,7 +286,7 @@ class Bullet(pygame.sprite.Sprite):
 			enemy.health -= 1
 			self.kill()
 			if enemy.health <= 0:
-				enemy.kill()
+				self.game.killEnemy(enemy)
 			break
 	
 	def collideWBlocks(self, direction):

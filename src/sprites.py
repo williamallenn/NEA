@@ -70,7 +70,6 @@ class Player(pygame.sprite.Sprite):
 		self.health = PlayerBaseHealth
 		self.max_health = PlayerBaseHealth
 		self.speed = 350
-		self.attack_cooldown = PlayerBaseAttackCooldown
 		self.damage = PlayerBaseDamage
 		self.money = StartingMoney
 		self.extra_bullets = 0
@@ -81,6 +80,10 @@ class Player(pygame.sprite.Sprite):
 		self.hit_invulnerability_ms = DefaultHitInvulnerabilityMs
 		self.chosen_upgrades = []
 		self.last_attack_time = 0
+		self.attack_cooldown_multiplier = 1.0
+		self.weapon_keys = list(WeaponData.keys())
+		self.weapon_index = 0
+		self.last_weapon_switch_time = 0
 
 	def move(self):
 		Key = pygame.key.get_pressed()
@@ -103,20 +106,34 @@ class Player(pygame.sprite.Sprite):
 		if self.direction.magnitude() != 0:
 			self.direction = self.direction.normalize()
 
+	def currentWeapon(self):
+		return WeaponData[self.weapon_keys[self.weapon_index]]
+
+	def switchWeapon(self):
+		now = pygame.time.get_ticks()
+		if now - self.last_weapon_switch_time < WeaponSwitchCooldownMs:
+			return
+		self.weapon_index = (self.weapon_index + 1) % len(self.weapon_keys)
+		self.last_weapon_switch_time = now
+
 	def shoot(self):
 		now = pygame.time.get_ticks()
-		if now - self.last_attack_time < self.attack_cooldown:
+		weapon = self.currentWeapon()
+		cooldown = weapon["cooldown"] * self.attack_cooldown_multiplier
+		if now - self.last_attack_time < cooldown:
 			return
 		mouse_screen_pos = pygame.mouse.get_pos()
 		world_mouse_pos = pygame.math.Vector2(mouse_screen_pos) + self.game.allSprites.offset
 		base_direction = world_mouse_pos - pygame.math.Vector2(self.rect.center)
 		if base_direction.magnitude() != 0:
 			base_direction = base_direction.normalize()
-		total_bullets = 1 + self.extra_bullets
-		spread_start = -(total_bullets - 1) * TwinShotAngleOffsetDegrees / 2
+		total_bullets = weapon["bullet_count"] + self.extra_bullets
+		spread_angle = weapon["spread_degrees"] if weapon["spread_degrees"] > 0 else TwinShotAngleOffsetDegrees
+		spread_start = -(total_bullets - 1) * spread_angle / 2
+		bullet_damage = self.damage * weapon["damage_multiplier"]
 		for i in range(total_bullets):
-			angle = spread_start + i * TwinShotAngleOffsetDegrees
-			Bullet(self.game, self, base_direction.rotate(angle), self.bullet_pierce, self.explosive_rounds)
+			angle = spread_start + i * spread_angle
+			Bullet(self.game, self, base_direction.rotate(angle), bullet_damage, weapon["bullet_speed"], self.bullet_pierce, self.explosive_rounds)
 		self.last_attack_time = now
 
 	def collideWBlocks(self, direction):
@@ -255,6 +272,36 @@ class Enemy(Player):
 		if self.direction.magnitude() != 0:
 			self.animate(dt)
 
+class WeaponSprite(pygame.sprite.Sprite):
+	def __init__(self, game, player):
+		self.game = game
+		self.player = player
+		self.groups = game.allSprites
+		pygame.sprite.Sprite.__init__(self, self.groups)
+		self.image = pygame.Surface((WeaponIconSize, WeaponIconSize), pygame.SRCALPHA)
+		self.rect = self.image.get_rect(center=player.rect.center)
+
+	def currentIcon(self):
+		key = self.player.weapon_keys[self.player.weapon_index]
+		icon = self.game.weaponIcons.get(key)
+		if icon is not None:
+			return icon
+		fallback = pygame.Surface((WeaponIconSize, WeaponIconSize), pygame.SRCALPHA)
+		pygame.draw.rect(fallback, WeaponData[key]["colour"], fallback.get_rect(), border_radius=WeaponIconCornerRadius)
+		return fallback
+
+	def update(self, dt):
+		mouse_screen_pos = pygame.mouse.get_pos()
+		world_mouse_pos = pygame.math.Vector2(mouse_screen_pos) + self.game.allSprites.offset
+		player_center = pygame.math.Vector2(self.player.rect.center)
+		direction = world_mouse_pos - player_center
+		if direction.magnitude() != 0:
+			direction = direction.normalize()
+
+		angle = direction.angle_to(pygame.math.Vector2(1, 0))
+		self.image = pygame.transform.rotate(self.currentIcon(), angle)
+		self.rect = self.image.get_rect(center=player_center + direction * WeaponOrbitRadius)
+
 class Block(pygame.sprite.Sprite):
 	def __init__(self, game, x, y):
 		self.game = game
@@ -286,18 +333,19 @@ class Ground(pygame.sprite.Sprite):
 		self.rect.y = self.y
 
 class Bullet(pygame.sprite.Sprite):
-	def __init__(self, game, player, direction, pierce=0, explosive=False):
+	def __init__(self, game, player, direction, damage, speed, pierce=0, explosive=False):
 		self.game = game
 		self.groups = game.allSprites, game.bullets
 		pygame.sprite.Sprite.__init__(self, self.groups)
 		self.image = pygame.Surface((16, 16))
 		self.image.fill("yellow")
 		self.direction = direction
+		self.damage = damage
 		self.pierce_remaining = pierce
 		self.explosive = explosive
 		spawn = pygame.math.Vector2(player.rect.center) + self.direction * 20
 		self.rect = self.image.get_rect(center=spawn)
-		self.speed = 300
+		self.speed = speed
 		self.spawnTime = pygame.time.get_ticks()
 		self.lifetime = 1000
 
@@ -320,7 +368,7 @@ class Bullet(pygame.sprite.Sprite):
 	def checkHit(self):
 		hitEnemies = pygame.sprite.spritecollide(self, self.game.enemies, False)
 		for enemy in hitEnemies:
-			enemy.health -= self.game.player.damage
+			enemy.health -= self.damage
 			if self.explosive:
 				self.applyExplosionDamage(enemy)
 			if enemy.health <= 0:

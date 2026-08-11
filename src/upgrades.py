@@ -27,7 +27,7 @@ def applySecondWind(player):
 	player.shield_charges += SecondWindShieldCharges
 
 def applyOverclock(player):
-	player.attack_cooldown *= OverclockCooldownMultiplier
+	player.attack_cooldown_multiplier *= OverclockCooldownMultiplier
 	player.damage *= OverclockDamageMultiplier
 
 def applyGlassCannon(player):

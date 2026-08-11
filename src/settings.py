@@ -1,6 +1,6 @@
 TileSize = 64
 
-RoundDurationSeconds = 15
+RoundDurationSeconds = 5
 UpgradeCardsPerRound = 3
 EnemyCountPerRoundGrowth = 2
 StartingEnemyCount = 5
@@ -9,7 +9,6 @@ StartingMoney = 0
 EnemyKillReward = 15
 
 PlayerBaseDamage = 1
-PlayerBaseAttackCooldown = 400
 PlayerBaseHealth = 10
 DefaultHitInvulnerabilityMs = 500
 
@@ -40,6 +39,25 @@ GameOverTitleFontSize = 72
 GameOverBodyFontSize = 30
 GameOverLineSpacing = 40
 GameOverTopMargin = 160
+
+WeaponSwitchCooldownMs = 200
+WeaponIconSize = 64
+WeaponIconSpacing = 12
+WeaponIconCornerRadius = 8
+WeaponOrbitRadius = TileSize // 2
+WeaponSpriteSheetPath = "images/weapon.png"
+
+WeaponData = {
+	"pistol": {"cooldown": 400, "damage_multiplier": 1.0, "bullet_count": 1, "bullet_speed": 300, "spread_degrees": 0, "colour": "#E8D44D"},
+	"shotgun": {"cooldown": 700, "damage_multiplier": 0.6, "bullet_count": 4, "bullet_speed": 260, "spread_degrees": 12, "colour": "#E87A4D"},
+	"smg": {"cooldown": 150, "damage_multiplier": 0.5, "bullet_count": 1, "bullet_speed": 340, "spread_degrees": 4, "colour": "#4DA6E8"},
+}
+
+WeaponIconSpriteCoords = {
+	"pistol": (0, 0),
+	"shotgun": (64, 0),
+	"smg": (128, 0),
+}
 
 GroundSpriteCoords = {
 	"ground": (0, 768),

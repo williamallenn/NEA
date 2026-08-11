@@ -86,6 +86,17 @@ class Game:
 		self.gameOverTitleFont = pygame.font.SysFont(None, GameOverTitleFontSize)
 		self.gameOverBodyFont = pygame.font.SysFont(None, GameOverBodyFontSize)
 		self.upgradeMenuOpen = False
+		self.weaponIcons = self.loadWeaponIcons()
+
+	def loadWeaponIcons(self):
+		icons = {}
+		try:
+			sheet = SpriteSheet(WeaponSpriteSheetPath, alpha=True)
+		except (pygame.error, FileNotFoundError):
+			return icons
+		for key, (sprite_x, sprite_y) in WeaponIconSpriteCoords.items():
+			icons[key] = sheet.getSprite(sprite_x, sprite_y, WeaponIconSize, WeaponIconSize)
+		return icons
 
 	def ChangeMap(self, newMap):
 		self.map = newMap
@@ -121,6 +132,7 @@ class Game:
 		width = max((len(row) for row in level), default=0)
 		spawn = (width // 2, height // 2)
 		self.player = Player(self, *spawn)
+		self.weaponSprite = WeaponSprite(self, self.player)
 
 		self.reachableTiles = getReachableTiles(self.validTiles, spawn)
 		unreachable = set(self.validTiles) - self.reachableTiles
@@ -163,6 +175,9 @@ class Game:
 			if event.type == pygame.QUIT:
 				self.playing = False
 				self.running = False
+			elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+				if not self.upgradeMenuOpen:
+					self.player.switchWeapon()
 			elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 				if self.upgradeMenuOpen:
 					for card in self.upgradeCards:
@@ -175,6 +190,7 @@ class Game:
 	def draw(self):
 		self.allSprites.customDraw(self.player)
 		self.drawHUD()
+		self.drawWeaponHUD()
 		if self.upgradeMenuOpen:
 			self.drawUpgradeMenuOverlay()
 		pygame.display.update()
@@ -186,6 +202,24 @@ class Game:
 		self.screen.blit(health_surf, (HudPadding, HudPadding + money_surf.get_height() + 4))
 		round_surf = self.upgradeBodyFont.render(f"Round {self.roundNumber} - {int(self.roundTimeRemaining)}s", True, "white")
 		self.screen.blit(round_surf, (HudPadding, HudPadding + (money_surf.get_height() + 4) * 2))
+
+	def drawWeaponHUD(self):
+		weapon_keys = self.player.weapon_keys
+		total_width = len(weapon_keys) * WeaponIconSize + (len(weapon_keys) - 1) * WeaponIconSpacing
+		w, h = self.screen.get_size()
+		start_x = w - total_width - HudPadding
+		for i, key in enumerate(weapon_keys):
+			weapon = WeaponData[key]
+			rect = pygame.Rect(start_x + i * (WeaponIconSize + WeaponIconSpacing), HudPadding, WeaponIconSize, WeaponIconSize)
+			icon = self.weaponIcons.get(key)
+			if icon is not None:
+				self.screen.blit(icon, rect)
+			else:
+				pygame.draw.rect(self.screen, weapon["colour"], rect, border_radius=WeaponIconCornerRadius)
+				label_surf = self.upgradeBodyFont.render(key[:1].upper(), True, "black")
+				self.screen.blit(label_surf, label_surf.get_rect(center=rect.center))
+			border_colour = "white" if i == self.player.weapon_index else "#444444"
+			pygame.draw.rect(self.screen, border_colour, rect, width=3, border_radius=WeaponIconCornerRadius)
 
 	def drawUpgradeMenuOverlay(self):
 		overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)

@@ -105,7 +105,10 @@ GROUND_SPRITE_COORDS = {
 	"water": (640, 768),
 	"water_top_left": (704, 384),
 	"water_left": (704, 448),
+	"water_bottom_left": (704, 512),
 	"water_top": (768, 384),
+	"water_bottom": (768, 512),
 	"water_top_right": (832, 384),
 	"water_right": (832, 448),
+	"water_bottom_right": (832, 512),
 }

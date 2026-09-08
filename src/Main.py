@@ -26,8 +26,14 @@ def get_water_variant(grid, x, y):
 		return "water_top_left"
 	if not up and not right:
 		return "water_top_right"
+	if not down and not left:
+		return "water_bottom_left"
+	if not down and not right:
+		return "water_bottom_right"
 	if not up:
 		return "water_top"
+	if not down:
+		return "water_bottom"
 	if not left:
 		return "water_left"
 	if not right:

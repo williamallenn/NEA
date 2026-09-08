@@ -193,6 +193,8 @@ class Game:
 			self.db.submit_score(self.current_user, time_alive, self.round_number, self.kill_count)
 
 	def update(self):
+		if pygame.mouse.get_pressed()[0]:
+			self.player.shoot()
 		self.all_sprites.update(self.dt)
 		if self.player.health <= 0:
 			self.playing = False
@@ -218,8 +220,6 @@ class Game:
 						if card.clicked(event):
 							self.choose_upgrade(card)
 							break
-				else:
-					self.player.shoot()
 
 	def draw(self):
 		self.all_sprites.custom_draw(self.player)
